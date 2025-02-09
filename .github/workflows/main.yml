@@ -2,7 +2,11 @@ name: Daily Price Check
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # Runs every day at 8 AM UTC
+    - cron: "0 8 * * *"  # Runs every day at 8 AM UT
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allows manual 
 
 jobs:
   scrape_and_email:
