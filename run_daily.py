@@ -11,6 +11,40 @@ SMTP_PORT = int(os.getenv("SMTP_PORT"))
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
+import requests
+from bs4 import BeautifulSoup
+
+def get_coursera_plus_annual_price():
+    url = "https://www.coursera.org/courseraplus"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/119.0.0.0 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+        
+        # Try to locate the annual price text
+        price_element = soup.find(string=lambda text: text and "Coursera Plus Annual" in text)
+        if price_element:
+            parent = price_element.find_parent()
+            if parent:
+                price_text = parent.get_text(strip=True)
+                return f"Coursera Plus Annual: {price_text}"
+        
+        # Fallback: find a price that looks like $399/year
+        price_candidates = soup.find_all(string=lambda text: text and "$" in text and "year" in text.lower())
+        for candidate in price_candidates:
+            if "coursera plus" in candidate.lower() or "/year" in candidate.lower():
+                return f"Coursera Plus Annual: {candidate.strip()}"
+        
+        return "Coursera Plus Annual price not found."
+    else:
+        return f"Failed to fetch Coursera Plus page. Status code: {response.status_code}"
+
 
 def get_frontendmasters_price():
     url = "https://frontendmasters.com/join/"
@@ -57,6 +91,6 @@ def send_email(content):
         print("Failed to send email:", e)
 
 if __name__ == "__main__":
-    price_info = get_frontendmasters_price()
+    price_info = get_coursera_plus_annual_price()
     send_email(price_info)
 
