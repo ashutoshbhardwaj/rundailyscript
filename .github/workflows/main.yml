@@ -21,7 +21,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install beautifulsoup4 request sselenium webdriver-manager
+        run: pip install beautifulsoup4 requests selenium webdriver-manager
 
       - name: Run the script
         env:
