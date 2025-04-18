@@ -33,7 +33,7 @@ def get_coursera_plus_annual_price():
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        driver.get("https://www.coursera.org/courseraplus")
+        driver.get("https://www.coursera.org/courseraplus?locale=en&country=AU")
 
         # Wait up to 15 seconds for any elements that might contain a dollar sign
         WebDriverWait(driver, 15).until(
