@@ -14,37 +14,45 @@ EMAIL_RECEIVER = os.getenv("EMAIL_RECEIVER")
 import requests
 from bs4 import BeautifulSoup
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+import re
+
 def get_coursera_plus_annual_price():
-    url = "https://www.coursera.org/courseraplus"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                      "AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/119.0.0.0 Safari/537.36"
-    }
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-    response = requests.get(url, headers=headers)
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=options)
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        # Try to locate the annual price text
-        price_element = soup.find(string=lambda text: text and "Coursera Plus Annual" in text)
-        if price_element:
-            parent = price_element.find_parent()
-            if parent:
-                price_text = parent.get_text(strip=True)
-                return f"Coursera Plus Annual: {price_text}"
-        
-        # Fallback: find a price that looks like $399/year
-        price_candidates = soup.find_all(string=lambda text: text and "$" in text and "year" in text.lower())
-        for candidate in price_candidates:
-            if "coursera plus" in candidate.lower() or "/year" in candidate.lower():
-                return f"Coursera Plus Annual: {candidate.strip()}"
+    try:
+        driver.get("https://www.coursera.org/courseraplus")
+
+        # Wait up to 15 seconds for any elements that might contain a dollar sign
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, "//*[contains(text(), '$')]"))
+        )
+
+        # Now get all visible text on the page
+        page_text = driver.find_element(By.TAG_NAME, "body").text
+
+        # Use regex to search for patterns like "$399/year", "$59/month", etc.
+        matches = re.findall(r"\$\d{2,4}\/year", page_text, re.IGNORECASE)
+        if matches:
+            return f"Coursera Plus Annual: {matches[0]}"
         
         return "Coursera Plus Annual price not found."
-    else:
-        return f"Failed to fetch Coursera Plus page. Status code: {response.status_code}"
-
+    except Exception as e:
+        return f"Error occurred: {e}"
+    finally:
+        driver.quit()
 
 def get_frontendmasters_price():
     url = "https://frontendmasters.com/join/"
@@ -92,5 +100,6 @@ def send_email(content):
 
 if __name__ == "__main__":
     price_info = get_coursera_plus_annual_price()
-    send_email(price_info)
+    print(price_info)
+    # send_email(price_info)
 
