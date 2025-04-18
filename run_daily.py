@@ -76,7 +76,7 @@ def send_email(content):
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = EMAIL_RECEIVER
-    msg["Subject"] = "FrontendMasters Pricing Update"
+    msg["Subject"] = "Coursera Pricing Update"
 
     msg.attach(MIMEText(content, "plain"))
 
