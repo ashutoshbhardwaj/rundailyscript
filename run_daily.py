@@ -101,5 +101,5 @@ def send_email(content):
 if __name__ == "__main__":
     price_info = get_coursera_plus_annual_price()
     print(price_info)
-    # send_email(price_info)
+    send_email(price_info)
 
